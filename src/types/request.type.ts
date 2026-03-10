@@ -1,13 +1,16 @@
 import { Request } from "express";
-import { Multer } from 'multer';
 
 // Extend the Multer File type to include fileUrl
 export interface MulterFileWithUrl extends Express.Multer.File {
+  buffer?: Buffer;
   fileUrl?: string;
+  filename?: string;
+  mimetype?: string;
+  originalname?: string;
 }
 
 // This is the type for req.file
-export type MulterFile = Express.Multer.File & { fileUrl?: string };
+export type MulterFile = MulterFileWithUrl;
 
 // This is the type for req.files when using .array() or .fields()
 export type MulterFiles = { [fieldname: string]: MulterFile[] } | MulterFile[];

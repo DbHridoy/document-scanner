@@ -1,4 +1,4 @@
-import multer, { StorageEngine } from "multer";
+import multer from "multer";
 import { storage } from "../config/multer";
 import { Request, Response, NextFunction } from "express";
 

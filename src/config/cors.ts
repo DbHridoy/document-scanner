@@ -1,11 +1,12 @@
-import { CorsOptions } from "cors";
 import { env } from "./env";
-
 
 const allowedOrigins = env.CLIENT_URLS?.split(",") || [];
 
-export const corsOptions: CorsOptions = {
-  origin: (origin, callback) => {
+export const corsOptions = {
+  origin: (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void
+  ) => {
     // allow requests with no origin (Postman, mobile apps)
     if (!origin) return callback(null, true);
 

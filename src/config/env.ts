@@ -8,7 +8,6 @@ const envSchema = z.object({
     .string()
     .default("mongodb+srv://hridoy:1234@practice0.qsptr89.mongodb.net"),
   NODE_ENV: z.string().default("development"),
-
   CLIENT_URLS: z.string().default("http://localhost:5173"),
 
   SALT_ROUNDS: z.coerce.number().default(10),
@@ -19,13 +18,13 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRY: z.string().default("7d"),
   JWT_REFRESH_EXPIRY: z.string().default("30d"),
 
-  GMAIL_USER: z.string().min(1, "Gmail user required"),
-  GMAIL_PASS: z.string().min(1, "Gmail password required"),
-
-  S3_BUCKET_REGION: z.string().min(1, "AWS region required"),
-  AWS_ACCESS_KEY: z.string().min(1, "AWS access key required"),
-  AWS_SECRET_KEY: z.string().min(1, "AWS secret key required"),
-  S3_BUCKET_NAME: z.string().min(1, "AWS bucket name required"),
+  GMAIL_USER: z.string().default(""),
+  GMAIL_PASS: z.string().default(""),
+  S3_BUCKET_REGION: z.string().default(""),
+  AWS_ACCESS_KEY: z.string().default(""),
+  AWS_SECRET_KEY: z.string().default(""),
+  S3_BUCKET_NAME: z.string().default(""),
+  GEMINI_AI_URL: z.string().default(""),
 });
 
 export const env = envSchema.parse(process.env);

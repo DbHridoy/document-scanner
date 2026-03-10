@@ -1,4 +1,3 @@
-import { email } from "zod";
 import { env } from "../config/env";
 import { transporter } from "../config/nodemailer";
 

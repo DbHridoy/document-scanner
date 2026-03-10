@@ -1,4 +1,5 @@
 import "express";
+import type { MulterFile, MulterFiles } from "./request.type";
 
 declare global {
   namespace Express {
@@ -9,6 +10,8 @@ declare global {
         email: string;
         role: string;
       };
+      file?: MulterFile;
+      files?: MulterFiles;
     }
   }
 }
