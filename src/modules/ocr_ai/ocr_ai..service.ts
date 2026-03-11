@@ -5,6 +5,7 @@ import { HttpCodes } from "../../constants/status-codes";
 import { commonAIFunction } from "./ocr_ai.utils";
 import { universalPrompt } from "./ocr_ai.constant";
 import { ocrtechs } from "./ocr_ai.model";
+import { TOcrExtractedData } from "./ocr_ai..interface";
 
 const getTests = async () => {
   return "ocr service is working";
@@ -35,6 +36,44 @@ const textToImageBuffer = async (data: Record<string, unknown> | string) => {
   return { success: true, url };
 };
 
+const normalizeExtractedData = (
+  extractedData: Record<string, unknown>,
+  ocrType: string
+): TOcrExtractedData => {
+  const rawResponse = extractedData;
+  const fieldsCandidate = extractedData.fields;
+
+  const fields =
+    fieldsCandidate && typeof fieldsCandidate === "object" && !Array.isArray(fieldsCandidate)
+      ? (fieldsCandidate as Record<string, unknown>)
+      : Object.fromEntries(
+          Object.entries(extractedData).filter(([key]) => key !== "documentType")
+        );
+
+  const documentTypeValue =
+    typeof extractedData.documentType === "string" && extractedData.documentType.trim()
+      ? extractedData.documentType.trim()
+      : ocrType !== "auto"
+        ? ocrType
+        : "unknown";
+
+  return {
+    documentType: documentTypeValue,
+    fields,
+    rawResponse,
+  };
+};
+
+const buildPromptWithTypeHint = (ocrType: string) => {
+  if (!ocrType || ocrType === "auto") {
+    return universalPrompt;
+  }
+
+  return {
+    text: `${universalPrompt.text}\nUse "${ocrType}" as a document type hint, but if the uploaded file is clearly another document type, return the actual detected type instead.`,
+  };
+};
+
 const ocrIntoDb = async (req: Request, userId: string) => {
   const file = req.file as
     | {
@@ -47,17 +86,26 @@ const ocrIntoDb = async (req: Request, userId: string) => {
     throw new apiError(HttpCodes.BadRequest, "File not provided");
   }
 
-  const { ocrType } = req.body as { ocrType: string };
-  const extractedData = await commonAIFunction(
+  const { ocrType = "auto" } = req.body as { ocrType?: string };
+  const aiResponse = await commonAIFunction(
     file.buffer,
-    universalPrompt,
+    buildPromptWithTypeHint(ocrType),
     file.mimetype || "image/png"
   );
-  const preview = await textToImageBuffer(extractedData as Record<string, unknown>);
+  if (!Object.keys(aiResponse).length) {
+    throw new apiError(
+      HttpCodes.BadRequest,
+      "AI returned no structured document data"
+    );
+  }
+
+  const extractedData = normalizeExtractedData(aiResponse, ocrType);
+  const preview = await textToImageBuffer(extractedData.fields);
 
   const created = await ocrtechs.create({
     userId: new Types.ObjectId(userId),
     ocrType,
+    documentType: extractedData.documentType,
     filePath: file.originalname || `upload-${Date.now()}`,
     textImageUrl: preview.url,
     extractedData,
@@ -65,6 +113,9 @@ const ocrIntoDb = async (req: Request, userId: string) => {
 
   return {
     id: created._id,
+    documentType: created.documentType,
+    ocrType: created.ocrType,
+    filePath: created.filePath,
     textImageUrl: created.textImageUrl,
     extractedData: created.extractedData,
   };

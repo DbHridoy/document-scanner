@@ -17,7 +17,12 @@ router.post(
   (req: Request, res: Response, next: NextFunction) => {
     try {
       if (req.body.data && typeof req.body.data === "string") {
-        req.body = JSON.parse(req.body.data);
+        const parsedBody = JSON.parse(req.body.data);
+        req.body = {
+          ...req.body,
+          ...parsedBody,
+        };
+        delete req.body.data;
       }
       next();
     } catch (error) {
