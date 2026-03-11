@@ -18,6 +18,12 @@ const TOcrTechSchema = new Schema<TOcrTech, OcrTechModel>(
       required: true,
       index: true,
     },
+    documentType: {
+      type: String,
+      required: true,
+      default: "unknown",
+      index: true,
+    },
     status: {
       type: Boolean,
       default: true,
